@@ -1,0 +1,15 @@
+diff --git a/auth.py b/auth.py
++++ b/auth.py
+@@ -0,0 +1,12 @@
++import sqlite3
++
++def login(username, password):
++    conn = sqlite3.connect("users.db")
++    cur = conn.cursor()
++    # monta query concatenando entrada do usuario
++    query = "SELECT * FROM users WHERE name = '" + username + "' AND pass = '" + password + "'"
++    cur.execute(query)
++    user = cur.fetchone()
++    if user != None:
++        return True
++    return False
