@@ -1,13 +1,8 @@
-# Fase 1 — MVP
 fastapi
 uvicorn[standard]
 httpx
 python-dotenv
 pydantic
 pydantic-settings
-
-# Fase 2 — orquestracao multi-agente
 langgraph
-
-# Demo / showcase
 rich

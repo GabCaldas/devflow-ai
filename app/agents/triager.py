@@ -1,33 +1,28 @@
-"""Agente Triador — atua como cerebro do Orquestrador.
-
-Classifica o PR (risco/area) e decide QUAIS agentes devem rodar. Essa decisao
-e o que torna o sistema agentico: o fluxo se adapta ao conteudo da mudanca.
-"""
 from app.llm.client import complete, parse_json
 from app.schemas import TriageResponse
 
-SYSTEM_PROMPT = """Voce e um tech lead que tria Pull Requests.
-Analise o diff e classifique. Decida quais agentes especializados devem rodar:
-- "reviewer": sempre que houver logica/codigo a revisar
-- "testgen": quando ha codigo novo que merece testes
-- "documenter": quando ha API/funcoes publicas que merecem documentacao
+SYSTEM_PROMPT = """You are a tech lead triaging Pull Requests.
+Analyze the diff and classify it. Decide which specialized agents should run:
+- "reviewer": whenever there is logic/code to review
+- "testgen": when there is new code that deserves tests
+- "documenter": when there are public APIs/functions that deserve documentation
 
-Responda SOMENTE com JSON valido:
+Respond ONLY with valid JSON:
 {
   "risk_level": "low|medium|high",
-  "affected_area": "area afetada",
-  "summary": "resumo do que o PR faz",
+  "affected_area": "affected area",
+  "summary": "summary of what the PR does",
   "recommended_agents": ["reviewer", "testgen", "documenter"]
 }"""
 
 
 async def triage_pr(diff: str, language: str | None = None) -> TriageResponse:
-    user_prompt = f"Linguagem: {language or 'desconhecida'}\n\nDiff:\n{diff}"
+    user_prompt = f"Language: {language or 'unknown'}\n\nDiff:\n{diff}"
     raw, provider = await complete(SYSTEM_PROMPT, user_prompt)
     data = parse_json(raw)
     return TriageResponse(
         risk_level=data.get("risk_level", "medium"),
-        affected_area=data.get("affected_area", "desconhecida"),
+        affected_area=data.get("affected_area", "unknown"),
         summary=data.get("summary", ""),
         recommended_agents=data.get("recommended_agents", ["reviewer"]),
         provider_used=provider,

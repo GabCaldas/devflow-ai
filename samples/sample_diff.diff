@@ -6,7 +6,6 @@ diff --git a/auth.py b/auth.py
 +def login(username, password):
 +    conn = sqlite3.connect("users.db")
 +    cur = conn.cursor()
-+    # monta query concatenando entrada do usuario
 +    query = "SELECT * FROM users WHERE name = '" + username + "' AND pass = '" + password + "'"
 +    cur.execute(query)
 +    user = cur.fetchone()

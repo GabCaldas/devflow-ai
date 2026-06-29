@@ -1,17 +1,6 @@
-"""Demo de linha de comando do DevFlow AI.
-
-Roda o pipeline multi-agente sobre um diff e imprime um relatorio formatado.
-Ideal para gravar um GIF de demonstracao para o portfolio.
-
-Uso:
-    python demo.py                      # usa samples/sample_diff.diff
-    python demo.py caminho/arquivo.diff # usa um diff proprio
-"""
 import asyncio
 import sys
 
-# garante UTF-8 na saida (consoles legados do Windows usam cp1252 e quebram
-# com acentos). Faz o demo rodar em qualquer terminal.
 try:
     sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
@@ -40,32 +29,30 @@ async def main() -> None:
 
     console.print(
         Panel.fit(
-            "[bold cyan]DevFlow AI[/bold cyan] — revisao multi-agente de codigo",
-            subtitle=f"analisando [dim]{path}[/dim]",
+            "[bold cyan]DevFlow AI[/bold cyan] - multi-agent code review",
+            subtitle=f"analyzing [dim]{path}[/dim]",
         )
     )
-    with console.status("[bold green]Agentes trabalhando...", spinner="dots"):
+    with console.status("[bold green]Agents working...", spinner="dots"):
         state = await analyze(diff, language="python")
 
-    # ----- Triagem -----
     t = state["triage"]
     console.print(
         Panel(
-            f"[bold]Risco:[/bold] {t['risk_level']}\n"
+            f"[bold]Risk:[/bold] {t['risk_level']}\n"
             f"[bold]Area:[/bold] {t['affected_area']}\n"
-            f"[bold]Resumo:[/bold] {t['summary']}\n"
-            f"[bold]Plano:[/bold] {', '.join(t['recommended_agents'])}",
-            title="Orquestrador / Triagem",
+            f"[bold]Summary:[/bold] {t['summary']}\n"
+            f"[bold]Plan:[/bold] {', '.join(t['recommended_agents'])}",
+            title="Orchestrator / Triage",
             border_style="magenta",
         )
     )
 
-    # ----- Revisor -----
     if review := state.get("review"):
-        table = Table(title="Revisor", show_lines=True, expand=True)
+        table = Table(title="Reviewer", show_lines=True, expand=True)
         table.add_column("Sev", style="bold", width=8)
-        table.add_column("Categoria", width=12)
-        table.add_column("Problema")
+        table.add_column("Category", width=12)
+        table.add_column("Problem")
         for issue in review["issues"]:
             color = SEVERITY_COLOR.get(issue["severity"], "white")
             table.add_row(
@@ -75,28 +62,22 @@ async def main() -> None:
             )
         console.print(table)
 
-    # ----- Testes -----
     if tests := state.get("tests"):
         console.print(
             Panel(
                 Syntax(tests["tests_code"].strip(), "python", theme="monokai",
                        line_numbers=False),
-                title=f"Gerador de Testes ({tests['framework']})",
+                title=f"Test Generator ({tests['framework']})",
                 border_style="green",
             )
         )
 
-    # ----- Documentacao -----
     if docs := state.get("docs"):
         console.print(
-            Panel(
-                docs["documentation"],
-                title="Documentador",
-                border_style="blue",
-            )
+            Panel(docs["documentation"], title="Documenter", border_style="blue")
         )
 
-    console.print("[dim]Concluido. Todos os agentes via free tier (Groq).[/dim]")
+    console.print("[dim]Done. All agents run on a free tier (Groq).[/dim]")
 
 
 if __name__ == "__main__":
