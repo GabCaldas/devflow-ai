@@ -6,6 +6,7 @@ from app.agents.documenter import generate_docs
 from app.agents.reviewer import review_code
 from app.agents.testgen import generate_tests
 from app.agents.triager import triage_pr
+from app.observability import observe
 
 
 class AnalysisState(TypedDict, total=False):
@@ -67,5 +68,6 @@ def build_graph():
 graph = build_graph()
 
 
+@observe(name="analyze")
 async def analyze(diff: str, language: str | None = None) -> AnalysisState:
     return await graph.ainvoke({"diff": diff, "language": language})

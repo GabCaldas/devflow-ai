@@ -15,5 +15,9 @@ class Settings(BaseSettings):
     github_token: str = ""
     max_diff_chars: int = 16000
 
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = "https://cloud.langfuse.com"
+
 
 settings = Settings()

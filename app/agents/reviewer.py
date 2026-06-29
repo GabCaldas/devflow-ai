@@ -1,4 +1,5 @@
 from app.llm.client import complete, parse_json
+from app.observability import observe
 from app.schemas import ReviewResponse, ReviewIssue
 
 SYSTEM_PROMPT = """You are a strict, objective senior code reviewer.
@@ -18,6 +19,7 @@ problems. Respond ONLY with valid JSON in this format:
 If there are no problems, return an empty issues list."""
 
 
+@observe(name="reviewer")
 async def review_code(diff: str, language: str | None = None) -> ReviewResponse:
     user_prompt = f"Language: {language or 'unknown'}\n\nDiff:\n{diff}"
     raw, provider = await complete(SYSTEM_PROMPT, user_prompt)

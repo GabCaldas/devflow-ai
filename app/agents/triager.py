@@ -1,4 +1,5 @@
 from app.llm.client import complete, parse_json
+from app.observability import observe
 from app.schemas import TriageResponse
 
 SYSTEM_PROMPT = """You are a tech lead triaging Pull Requests.
@@ -16,6 +17,7 @@ Respond ONLY with valid JSON:
 }"""
 
 
+@observe(name="triager")
 async def triage_pr(diff: str, language: str | None = None) -> TriageResponse:
     user_prompt = f"Language: {language or 'unknown'}\n\nDiff:\n{diff}"
     raw, provider = await complete(SYSTEM_PROMPT, user_prompt)

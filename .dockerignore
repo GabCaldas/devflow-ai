@@ -1,0 +1,10 @@
+.venv
+__pycache__
+*.pyc
+.git
+.github
+.env
+demo.py
+analyze_pr.py
+samples
+README.md

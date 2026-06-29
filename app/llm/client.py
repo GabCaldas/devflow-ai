@@ -4,12 +4,14 @@ import re
 import httpx
 
 from app.config import settings
+from app.observability import observe, record_generation
 
 
 class LLMError(RuntimeError):
     pass
 
 
+@observe(as_type="generation", name="groq")
 async def _call_groq(system: str, user: str) -> str:
     if not settings.groq_api_key:
         raise LLMError("GROQ_API_KEY is missing")
@@ -27,9 +29,21 @@ async def _call_groq(system: str, user: str) -> str:
     async with httpx.AsyncClient(timeout=60) as http:
         resp = await http.post(url, headers=headers, json=payload)
         resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"]
+        data = resp.json()
+
+    usage = data.get("usage", {})
+    record_generation(
+        model=settings.groq_model,
+        usage_details={
+            "input": usage.get("prompt_tokens", 0),
+            "output": usage.get("completion_tokens", 0),
+            "total": usage.get("total_tokens", 0),
+        },
+    )
+    return data["choices"][0]["message"]["content"]
 
 
+@observe(as_type="generation", name="gemini")
 async def _call_gemini(system: str, user: str) -> str:
     if not settings.gemini_api_key:
         raise LLMError("GEMINI_API_KEY is missing")
@@ -46,7 +60,18 @@ async def _call_gemini(system: str, user: str) -> str:
     async with httpx.AsyncClient(timeout=60) as http:
         resp = await http.post(url, json=payload)
         resp.raise_for_status()
-        return resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+        data = resp.json()
+
+    usage = data.get("usageMetadata", {})
+    record_generation(
+        model=settings.gemini_model,
+        usage_details={
+            "input": usage.get("promptTokenCount", 0),
+            "output": usage.get("candidatesTokenCount", 0),
+            "total": usage.get("totalTokenCount", 0),
+        },
+    )
+    return data["candidates"][0]["content"]["parts"][0]["text"]
 
 
 async def complete(system: str, user: str) -> tuple[str, str]:

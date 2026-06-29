@@ -1,6 +1,7 @@
 import re
 
 from app.llm.client import complete
+from app.observability import observe
 from app.schemas import TestGenResponse
 
 FRAMEWORK_BY_LANG = {
@@ -23,6 +24,7 @@ def _strip_code_fence(text: str) -> str:
     return text.strip()
 
 
+@observe(name="testgen")
 async def generate_tests(diff: str, language: str | None = None) -> TestGenResponse:
     user_prompt = f"Language: {language or 'unknown'}\n\nDiff:\n{diff}"
     raw, provider = await complete(SYSTEM_PROMPT, user_prompt)

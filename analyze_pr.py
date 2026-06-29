@@ -10,6 +10,7 @@ from rich.console import Console
 
 from app.config import settings
 from app.graph import analyze
+from app.observability import flush
 from app.report import to_markdown
 from app.sources.github import (
     GitHubError,
@@ -49,6 +50,8 @@ async def main() -> None:
         console.print(f"[bold green]Comment posted:[/bold green] {comment_url}")
     else:
         console.print("[dim]Use --post to publish this review as a PR comment.[/dim]")
+
+    flush()
 
 
 if __name__ == "__main__":

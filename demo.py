@@ -12,6 +12,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 from app.graph import analyze
+from app.observability import flush
 
 console = Console()
 
@@ -78,6 +79,7 @@ async def main() -> None:
         )
 
     console.print("[dim]Done. All agents run on a free tier (Groq).[/dim]")
+    flush()
 
 
 if __name__ == "__main__":

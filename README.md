@@ -103,6 +103,16 @@ uvicorn app.main:app --reload --port 8123
 # interactive docs at http://127.0.0.1:8123/docs
 ```
 
+### With Docker
+
+```bash
+docker compose up --build
+# API on http://127.0.0.1:8123 (mapped to port 8000 inside the container)
+```
+
+The container reads configuration from `.env` at runtime, so no secrets are baked
+into the image.
+
 Endpoints:
 
 - `GET /health` — health check
@@ -120,6 +130,14 @@ Request and posts the review as a comment automatically. To enable it:
    secret is needed.
 2. Open or update a Pull Request — the review appears as a comment.
 
+## Observability
+
+Every LLM call is traced with [Langfuse](https://langfuse.com). Each analysis
+produces a trace tree (orchestrator and agent spans, with one generation per model
+call), capturing the model, token usage and latency. Set `LANGFUSE_PUBLIC_KEY`,
+`LANGFUSE_SECRET_KEY` and `LANGFUSE_HOST` to enable it; without them the
+instrumentation is a no-op, so the app runs unchanged.
+
 ## Design notes
 
 - **Provider abstraction with fallback.** The LLM client tries Groq first and falls
@@ -131,6 +149,9 @@ Request and posts the review as a comment automatically. To enable it:
 - **Tolerant JSON parsing.** Model output is not always valid JSON, so the parser
   strips code fences, isolates the object, and handles literal control characters
   and invalid escape sequences.
+- **Optional observability.** Tracing is wired through a thin module that no-ops
+  when Langfuse is not configured, so the dependency never becomes a hard
+  requirement.
 
 ## Roadmap
 
@@ -141,6 +162,6 @@ Request and posts the review as a comment automatically. To enable it:
 | 3 | Code RAG (vector search over the repo) | Planned |
 | 4 | Persistence (Postgres + MongoDB) | Planned |
 | 5 | GitHub integration: analyze PR, comment, CI workflow | Done |
-| 6 | Evaluation harness | Planned |
-| 7 | Docker + Terraform + deploy | Planned |
-| 8 | Dashboard | Planned |
+| 6 | Observability with Langfuse (traces, tokens, cost) | Done |
+| 7 | Containerization (Docker) | Done |
+| 8 | Terraform + cloud deploy | Planned |
