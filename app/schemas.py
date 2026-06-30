@@ -39,6 +39,13 @@ class DocResponse(BaseModel):
     provider_used: str = ""
 
 
+class RetrievedSource(BaseModel):
+    path: str
+    start_line: int
+    end_line: int
+    score: float
+
+
 class AnalysisRequest(BaseModel):
     diff: str = Field(..., min_length=1)
     language: str | None = None
@@ -49,6 +56,7 @@ class AnalysisResponse(BaseModel):
     review: ReviewResponse | None = None
     tests: TestGenResponse | None = None
     docs: DocResponse | None = None
+    retrieved_sources: list[RetrievedSource] = Field(default_factory=list)
 
 
 class PRRequest(BaseModel):

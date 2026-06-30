@@ -12,13 +12,15 @@ It runs entirely on free tiers (Groq, with Google Gemini as a fallback).
 A single request flows through the system like this:
 
 1. A diff (or a GitHub PR) comes in.
-2. An **orchestrator** triages the change: it classifies risk and area, and
+2. A local **Code RAG** retrieves relevant repository files without an external
+   embedding API.
+3. An **orchestrator** triages the change: it classifies risk and area, and
    decides which agents are worth running.
-3. The selected agents run **in parallel**:
+4. The selected agents run **in parallel** using the retrieved context:
    - **Reviewer** — finds bugs, security flaws, performance and style issues.
    - **Test Generator** — writes automated tests for the new code.
    - **Documenter** — produces docstrings and usage notes.
-4. The results are aggregated into a single report.
+5. The results are aggregated into a single report.
 
 Because the orchestrator picks the agents based on the content of the change, the
 flow adapts: a README-only PR runs just the Documenter, while a change to auth code
@@ -27,7 +29,8 @@ runs all three.
 ```mermaid
 flowchart TD
     PR[Diff / Pull Request] --> API[FastAPI]
-    API --> ORQ[Orchestrator<br/>triage + plan]
+    API --> RAG[Local Code RAG<br/>hash vectors + BM25]
+    RAG --> ORQ[Orchestrator<br/>triage + plan]
     ORQ -->|parallel fan-out| REV[Reviewer]
     ORQ -->|parallel fan-out| TST[Test Generator]
     ORQ -->|parallel fan-out| DOC[Documenter]
@@ -54,6 +57,7 @@ app/
   config.py          settings loaded from environment / .env
   schemas.py         request and response models (Pydantic)
   graph.py           LangGraph orchestration
+  rag/index.py       local repository chunking and hybrid retrieval
   report.py          renders the result as a markdown PR comment
   llm/client.py      multi-provider LLM client (Groq -> Gemini fallback)
   agents/            reviewer, testgen, documenter, triager
@@ -113,6 +117,9 @@ docker compose up --build
 The container reads configuration from `.env` at runtime, so no secrets are baked
 into the image.
 
+Mount the repository to analyze and set `CODEBASE_PATH` to that mount when the
+codebase is not part of the container image.
+
 Endpoints:
 
 - `GET /health` — health check
@@ -153,13 +160,34 @@ instrumentation is a no-op, so the app runs unchanged.
   when Langfuse is not configured, so the dependency never becomes a hard
   requirement.
 
+## Local Code RAG
+
+Code RAG is enabled by default and indexes the directory configured by
+`CODEBASE_PATH` (default: the current directory). It chunks supported source files
+and combines two dependency-free ranking strategies:
+
+- stable feature-hashing vectors with cosine similarity;
+- BM25 lexical ranking, with an additional boost for files changed by the diff.
+
+No embedding API, vector database or paid service is required. Retrieved chunks
+are injected only into the specialized agents, keeping the triage request small,
+and are exposed as `retrieved_sources` in API responses. This first implementation
+is lexical/structural rather than fully semantic; a trained local embedding model
+can replace the hashing layer later without changing the pipeline contract.
+
+Run the retrieval tests with:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
 ## Roadmap
 
 | Stage | Scope | Status |
 |------|-------|--------|
 | 1 | REST API + reviewer agent | Done |
 | 2 | Multi-agent orchestration (LangGraph) | Done |
-| 3 | Code RAG (vector search over the repo) | Planned |
+| 3 | Code RAG (local hybrid vector + BM25 search) | Done |
 | 4 | Persistence (Postgres + MongoDB) | Planned |
 | 5 | GitHub integration: analyze PR, comment, CI workflow | Done |
 | 6 | Observability with Langfuse (traces, tokens, cost) | Done |

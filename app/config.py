@@ -15,6 +15,12 @@ class Settings(BaseSettings):
     github_token: str = ""
     max_diff_chars: int = 16000
 
+    rag_enabled: bool = True
+    codebase_path: str = "."
+    rag_top_k: int = 5
+    rag_max_files: int = 1500
+    rag_max_context_chars: int = 7000
+
     langfuse_public_key: str = ""
     langfuse_secret_key: str = ""
     langfuse_host: str = "https://cloud.langfuse.com"

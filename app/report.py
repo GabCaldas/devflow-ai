@@ -12,6 +12,14 @@ def to_markdown(state: AnalysisState) -> str:
             f"{triage.get('summary', '')}"
         )
 
+    sources = state.get("retrieved_sources", [])
+    if sources:
+        source_names = [
+            f"`{source['path']}:{source['start_line']}-{source['end_line']}`"
+            for source in sources
+        ]
+        parts.append("**Repository context:** " + ", ".join(source_names))
+
     review = state.get("review")
     if review:
         parts.append("### Code review")

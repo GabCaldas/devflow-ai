@@ -33,6 +33,7 @@ def _build_response(state: AnalysisState) -> AnalysisResponse:
         review=state.get("review"),
         tests=state.get("tests"),
         docs=state.get("docs"),
+        retrieved_sources=state.get("retrieved_sources", []),
     )
 
 
