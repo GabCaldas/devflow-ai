@@ -109,16 +109,34 @@ uvicorn app.main:app --reload --port 8123
 
 ### With Docker
 
+Create the local environment file first. GitHub Actions secrets are scoped to
+GitHub and are not automatically available to Docker Compose:
+
 ```bash
+cp .env.example .env
+# set at least GROQ_API_KEY in .env
 docker compose up --build
 # API on http://127.0.0.1:8123 (mapped to port 8000 inside the container)
 ```
 
 The container reads configuration from `.env` at runtime, so no secrets are baked
-into the image.
+into the image. Check readiness and logs with:
 
-Mount the repository to analyze and set `CODEBASE_PATH` to that mount when the
-codebase is not part of the container image.
+```bash
+docker compose ps
+docker compose logs -f api
+curl http://127.0.0.1:8123/health
+```
+
+The current repository is mounted read-only at `/workspace` and used by Code RAG.
+To analyze a different repository or use another host port:
+
+```bash
+CODEBASE_PATH_HOST=/path/to/repository DEVFLOW_PORT=9000 docker compose up --build
+```
+
+The API runs as a non-root user with a read-only filesystem. Only a small temporary
+filesystem is writable at `/tmp`.
 
 Endpoints:
 
@@ -174,6 +192,11 @@ are injected only into the specialized agents, keeping the triage request small,
 and are exposed as `retrieved_sources` in API responses. This first implementation
 is lexical/structural rather than fully semantic; a trained local embedding model
 can replace the hashing layer later without changing the pipeline contract.
+
+For a visual walkthrough of the complete retrieval flow, open the
+[interactive Code RAG guide](docs/rag-e2e.html) in a browser. It follows a
+sample Pull Request through chunking, hybrid ranking, prompt augmentation,
+agent execution and the final review.
 
 Run the retrieval tests with:
 

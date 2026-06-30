@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DevFlow AI — RAG de ponta a ponta</title>
+<style>
+:root{--ink:#17202a;--muted:#62707d;--blue:#2364d2;--cyan:#26a6b5;--yellow:#ffd166;--green:#33a56b;--red:#dc5262;--line:#dbe2e8;--paper:#fffdf8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:radial-gradient(circle at 8% 0,#e7f5ff 0,transparent 28rem),radial-gradient(circle at 95% 18%,#fff1bd 0,transparent 24rem),var(--paper);font:16px/1.55 Inter,system-ui,sans-serif}
+button{font:inherit}.wrap{width:min(1100px,calc(100% - 32px));margin:auto}code,pre{font-family:Consolas,"Liberation Mono",monospace}
+header{padding:56px 0 30px}.tag{display:inline-block;padding:6px 11px;border:1px solid #b9d1f5;border-radius:99px;color:var(--blue);background:#f3f8ff;font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+h1{max-width:800px;margin:16px 0 12px;font-size:clamp(2.3rem,7vw,4.8rem);line-height:.98;letter-spacing:-.055em}.lead{max-width:760px;margin:0;color:var(--muted);font-size:1.2rem}
+.analogy{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin:28px 0 34px;padding:20px;border:1px solid #efd881;border-radius:20px;background:#fff8da}.analogy i{font-style:normal;font-size:2.7rem}.analogy strong{display:block}
+nav{position:sticky;top:0;z-index:5;padding:12px 0;border-block:1px solid var(--line);background:#fffdf8eb;backdrop-filter:blur(12px)}.tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}.tab{min-height:54px;padding:7px;border:1px solid var(--line);border-radius:12px;color:var(--muted);background:white;cursor:pointer;transition:.2s}.tab:hover{transform:translateY(-2px)}.tab.active{color:white;border-color:var(--blue);background:var(--blue);box-shadow:0 7px 18px #2364d23d}.tab b{display:block;font-size:.73rem}.tab span{font-size:.8rem}
+main{padding:34px 0 70px}.stage{display:none;min-height:570px;padding:clamp(22px,4vw,42px);border:1px solid var(--line);border-radius:26px;background:#fffffff2;box-shadow:0 14px 34px #17202a1a;animation:enter .35s ease}.stage.active{display:block}@keyframes enter{from{opacity:0;transform:translateY(9px)}}.number{color:var(--blue);font-size:.8rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
+h2{margin:5px 0 10px;font-size:clamp(1.7rem,4vw,2.75rem);line-height:1.1;letter-spacing:-.035em}.explain{max-width:800px;color:var(--muted);font-size:1.06rem}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:26px}.card{padding:18px;border:1px solid var(--line);border-radius:17px;background:#fff}.card h3{margin:0 0 10px}.label{display:block;margin-bottom:8px;color:var(--muted);font-size:.72rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+pre{margin:0;overflow:auto;padding:16px;border-radius:13px;color:#eaf2ff;background:#17202a;font-size:.84rem;line-height:1.6}.add{color:#82e6ae}.remove{color:#ff9ba5}.focus{padding:1px 3px;color:#17202a;background:var(--yellow);border-radius:4px}.callout{margin-top:18px;padding:15px 17px;border-left:5px solid var(--cyan);border-radius:8px 14px 14px 8px;background:#eefbfc}
+.repo{display:grid;gap:9px}.file{padding:10px 13px;border:1px solid var(--line);border-radius:10px;background:#f9fbfd}.file.good{border-color:#71c69a;background:#eefaf3}.file.off{opacity:.45;text-decoration:line-through}.chunks{display:flex;flex-wrap:wrap;gap:9px}.chunk{padding:9px 12px;border:1px solid #b8cae5;border-radius:10px;color:#244875;background:#f3f7fd;font-size:.84rem}
+.score{margin:13px 0}.score-head{display:flex;justify-content:space-between;margin-bottom:5px;font-size:.88rem}.bar{height:13px;overflow:hidden;border-radius:99px;background:#eaf0f5}.fill{width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--blue),var(--cyan));transition:width .9s}.stage.active .fill{width:var(--score)}.formula{margin-top:18px;padding:14px;border:1px dashed #9db5d8;border-radius:13px;text-align:center;background:#f7faff;font-weight:700}
+.prompt{display:grid;gap:7px;padding:15px;border-radius:16px;color:white;background:#17202a}.prompt div{padding:12px;border:1px solid #405262;border-radius:10px}.prompt .diff{border-left:5px solid var(--red)}.prompt .context{border-left:5px solid var(--green)}.prompt small{display:block;color:#aebdca;text-transform:uppercase}
+.agents{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-top:20px}.agent{padding:17px;border:1px solid var(--line);border-radius:16px;background:white;text-align:center}.agent i{display:block;font-style:normal;font-size:2.3rem}.agent strong{display:block;margin:7px}.agent p{margin:0;color:var(--muted);font-size:.87rem}
+.verdict{padding:20px;border:1px solid #efb5bc;border-radius:17px;background:#fff4f5}.issue{display:grid;grid-template-columns:auto 1fr;gap:12px;margin-top:12px}.badge{align-self:start;padding:4px 8px;border-radius:99px;color:white;background:var(--red);font-size:.72rem;font-weight:900}.sources{margin-top:17px;padding:15px;border:1px solid #b7dfca;border-radius:13px;background:#f0faf5}.sources code{color:#17693e}
+.controls{display:flex;justify-content:space-between;margin-top:18px}.controls button{padding:11px 18px;border:1px solid #b4c2ce;border-radius:12px;background:white;cursor:pointer}.controls .next{color:white;border-color:var(--blue);background:var(--blue)}.controls button:disabled{opacity:.4;cursor:not-allowed}footer{padding-bottom:50px;color:var(--muted);text-align:center}
+@media(max-width:760px){.tabs{grid-template-columns:repeat(3,1fr)}.grid,.agents{grid-template-columns:1fr}.stage{min-height:0}.tab span{font-size:.7rem}}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <span class="tag">DevFlow AI · visão E2E</span>
+  <h1>Como o RAG ajuda a IA a “olhar ao redor”</h1>
+  <p class="lead">Uma viagem interativa por um Pull Request fictício, do diff recebido até o comentário final.</p>
+  <div class="analogy"><i>🕵️‍♀️</i><div><strong>Pense no RAG como um detetive com acesso ao arquivo da empresa.</strong>O diff é a pista nova. Antes de responder, ele procura no repositório documentos que expliquem essa pista.</div></div>
+</header>
+
+<nav aria-label="Etapas"><div class="wrap tabs">
+  <button class="tab active" data-step="0"><b>01</b><span>Chega o diff</span></button>
+  <button class="tab" data-step="1"><b>02</b><span>Fatia o repo</span></button>
+  <button class="tab" data-step="2"><b>03</b><span>Busca híbrida</span></button>
+  <button class="tab" data-step="3"><b>04</b><span>Monta contexto</span></button>
+  <button class="tab" data-step="4"><b>05</b><span>Agentes analisam</span></button>
+  <button class="tab" data-step="5"><b>06</b><span>Sai o relatório</span></button>
+</div></nav>
+
+<main class="wrap">
+<section class="stage active" data-stage="0">
+  <span class="number">Etapa 1 · Entrada</span><h2>Um Pull Request muda só três linhas</h2>
+  <p class="explain">O GitHub entrega o diff. Ele mostra o que mudou, mas não o contrato de <code>get_user()</code>.</p>
+  <div class="grid">
+    <div class="card"><span class="label">Diff recebido</span><pre>diff --git a/app/login.py b/app/login.py
+<span class="add">&#43; async def login(email):</span>
+<span class="add">&#43;     user = await <span class="focus">get_user(email)</span></span>
+<span class="remove">-     return user is not None</span>
+<span class="add">&#43;     return user.active</span></pre></div>
+    <div class="card"><span class="label">O diff não responde</span><ul><li><code>get_user()</code> pode devolver <code>None</code>?</li><li>Todo usuário possui <code>active</code>?</li><li>Qual padrão o projeto usa?</li></ul></div>
+  </div>
+  <div class="callout"><strong>Sem RAG:</strong> o agente adivinha. <strong>Com RAG:</strong> pesquisa as respostas no próprio código.</div>
+</section>
+
+<section class="stage" data-stage="1">
+  <span class="number">Etapa 2 · Preparação</span><h2>O repositório vira uma coleção pesquisável</h2>
+  <p class="explain">O sistema percorre <code>CODEBASE_PATH</code>, ignora dependências e divide arquivos em blocos de até 80 linhas, com sobreposição de 15.</p>
+  <div class="grid">
+    <div class="card repo"><h3>📁 Repositório</h3><div class="file">app/login.py</div><div class="file good">app/users/repository.py ← relevante</div><div class="file good">app/users/models.py ← relevante</div><div class="file">app/payments/service.py</div><div class="file off">node_modules/ ← ignorado</div><div class="file off">.git/ ← ignorado</div></div>
+    <div class="card"><h3>✂️ Chunks gerados</h3><div class="chunks"><span class="chunk">repository.py:1–80</span><span class="chunk">repository.py:66–131</span><span class="chunk">models.py:1–72</span><span class="chunk">service.py:1–80</span></div><p>Cada bloco guarda caminho, linhas e conteúdo. Nada é enviado para uma API de embeddings.</p></div>
+  </div>
+</section>
+
+<section class="stage" data-stage="2">
+  <span class="number">Etapa 3 · Recuperação</span><h2>Cada chunk recebe uma nota</h2>
+  <p class="explain">O diff vira a consulta. Feature hashing cria vetores locais; BM25 valoriza termos raros como <code>get_user</code> e <code>active</code>.</p>
+  <div class="grid">
+    <div class="card"><h3>🏁 Ranking</h3>
+      <div class="score"><div class="score-head"><span>repository.py:1–80</span><b>0,91</b></div><div class="bar"><div class="fill" style="--score:91%"></div></div></div>
+      <div class="score"><div class="score-head"><span>models.py:1–72</span><b>0,84</b></div><div class="bar"><div class="fill" style="--score:84%"></div></div></div>
+      <div class="score"><div class="score-head"><span>login.py:1–45</span><b>0,76</b></div><div class="bar"><div class="fill" style="--score:76%"></div></div></div>
+      <div class="score"><div class="score-head"><span>payments/service.py</span><b>0,09</b></div><div class="bar"><div class="fill" style="--score:9%"></div></div></div>
+    </div>
+    <div class="card"><h3>Por que esses venceram?</h3><ul><li><code>repository.py</code> define <code>get_user()</code>.</li><li><code>models.py</code> define <code>User.active</code>.</li><li>O arquivo alterado recebe bônus.</li><li>Payments não traz contexto útil.</li></ul><div class="formula">nota = 45% vetor + 55% BM25 + bônus</div></div>
+  </div>
+</section>
+
+<section class="stage" data-stage="3">
+  <span class="number">Etapa 4 · Augmentation</span><h2>O sistema monta o pacote de evidências</h2>
+  <p class="explain">Os melhores chunks são anexados ao diff. O limite de 7.000 caracteres protege o free tier.</p>
+  <div class="prompt">
+    <div class="diff"><small>1 · Alteração</small>Diff: <code>return user.active</code></div>
+    <div class="context"><small>2 · Contexto recuperado</small><code>get_user(...) -&gt; User | None</code><br><code>class User: active: bool</code></div>
+    <div><small>3 · Instrução</small>Encontre bugs e proponha correções usando o diff e o contexto como evidência.</div>
+  </div>
+  <div class="callout">O código recuperado é marcado como <strong>referência, não instrução</strong>, reduzindo risco de prompt injection.</div>
+</section>
+
+<section class="stage" data-stage="4">
+  <span class="number">Etapa 5 · Generation</span><h2>Os agentes usam a mesma evidência</h2>
+  <p class="explain">O Triager recebe só o diff para economizar tokens. Os agentes escolhidos rodam em paralelo com o contexto.</p>
+  <div class="agents">
+    <div class="agent"><i>🧐</i><strong>Reviewer</strong><p>Vê que <code>user</code> pode ser <code>None</code> antes de <code>.active</code>.</p></div>
+    <div class="agent"><i>🧪</i><strong>Test Generator</strong><p>Cria testes para usuário inexistente e inativo.</p></div>
+    <div class="agent"><i>📝</i><strong>Documenter</strong><p>Documenta retorno e comportamento do login.</p></div>
+  </div>
+  <div class="callout"><strong>Onde entra o LLM?</strong> Apenas aqui. Busca, vetorização e ranking rodam localmente e sem custo de API.</div>
+</section>
+
+<section class="stage" data-stage="5">
+  <span class="number">Etapa 6 · Saída</span><h2>O relatório apresenta problema e evidência</h2>
+  <p class="explain">O DevFlow AI agrega os resultados e pode publicar o comentário no Pull Request.</p>
+  <div class="verdict"><strong>🔎 Code review</strong><div class="issue"><span class="badge">HIGH</span><div><strong>Possível AttributeError</strong><br><code>get_user()</code> pode retornar <code>None</code>. Verifique antes de acessar <code>user.active</code>.<br><br><strong>Sugestão:</strong> <code>return user is not None and user.active</code></div></div></div>
+  <div class="sources"><strong>📚 Fontes recuperadas</strong><br><code>app/users/repository.py:1–80</code><br><code>app/users/models.py:1–72</code></div>
+  <div class="callout"><strong>R + A + G:</strong> recuperar código → adicionar ao prompt → gerar resposta fundamentada.</div>
+</section>
+
+<div class="controls"><button id="prev" disabled>← Anterior</button><button class="next" id="next">Próxima etapa →</button></div>
+</main>
+<footer class="wrap">DevFlow AI · Code RAG local: feature hashing + BM25 · sem API de embeddings</footer>
+<script>
+const tabs=[...document.querySelectorAll('.tab')],stages=[...document.querySelectorAll('.stage')],prev=document.querySelector('#prev'),next=document.querySelector('#next');let current=0;
+function show(i){current=Math.max(0,Math.min(i,stages.length-1));tabs.forEach((x,n)=>x.classList.toggle('active',n===current));stages.forEach((x,n)=>x.classList.toggle('active',n===current));prev.disabled=current===0;next.disabled=current===stages.length-1;next.textContent=current===stages.length-1?'Fluxo concluído ✓':'Próxima etapa →';document.querySelector('main').scrollIntoView({behavior:'smooth'})}
+tabs.forEach(x=>x.addEventListener('click',()=>show(Number(x.dataset.step))));prev.addEventListener('click',()=>show(current-1));next.addEventListener('click',()=>show(current+1));document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')show(current+1);if(e.key==='ArrowLeft')show(current-1)});
+</script>
+</body>
+</html>
+
